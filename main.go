@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
@@ -14,7 +15,9 @@ const (
 	experience
 )
 
-const width = 70
+const SafeContentHeight = 10
+const SafeContentWidth = 70
+const Width = 12
 
 type styles struct {
 	inactiveTab lipgloss.Border
@@ -35,6 +38,70 @@ type Model struct {
 	height int
 	styles *styles
 	tabs *[]tab
+	viewport viewport.Model
+}
+
+func ContentDetail() []tab {
+	// STYLE
+	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#8800ff"))
+	subHeaderStyle := lipgloss.NewStyle().Bold(true)
+	linkStyle := lipgloss.NewStyle().Underline(true).Foreground(lipgloss.Color("#0000FF"))
+
+	tabs := []tab{
+		{
+			title: "About me",
+			content: lipgloss.JoinVertical(lipgloss.Left,
+				lipgloss.JoinHorizontal(lipgloss.Top,
+					" /\\_/\\\n( o.o )\n > ^ <",
+					"   ",
+					"My name is Jirayut Najan.\nSecond year computer engineering\nstudy in Chulalongkorn University",
+					lipgloss.NewStyle().Height(SafeContentHeight-1).Render(""),
+				),
+				lipgloss.JoinHorizontal(lipgloss.Left,
+					linkStyle.Foreground(lipgloss.Color("#63e0ff")).Hyperlink("https://jirayutnajan.github.io/").Render("Website") + " ",
+					linkStyle.Foreground(lipgloss.Color("#5e5e5e")).Hyperlink("https://github.com/jirayutNajan").Render("Github") + " ",
+					linkStyle.Foreground(lipgloss.Color("#1877F2")).Hyperlink("https://www.facebook.com/jirayut.najan/").Render("Facebook") + " ",
+					linkStyle.Foreground(lipgloss.Color("#EA4335")).Hyperlink("mailto:jirayutnajna05@gmail.com").Render("Email") + " ",
+					),
+			),
+		},
+		{
+			title: "Experience",
+			content: lipgloss.JoinVertical(lipgloss.Left, 
+				headerStyle.Render("Freelance Full-stack Developer | Academic Service Center, MSU"),
+				subHeaderStyle.Render("[Mar, 2026]"),
+				"Developed a full-stack online course registration platform for the Academic Service Center, Mahasarakham University.",
+				linkStyle.Hyperlink("https://umsuregister.msu.ac.th/").Render("umsuregister.msu.ac.th"),
+				"",
+
+				headerStyle.Render("Fullstack Developer | Friday Activity Crew"),
+				subHeaderStyle.Render("[September 2025 - March 2026]"),
+				"Developed the frontend and backend for the Talent Journey project — an activity registration system for CEDT students in the “Friday Act” course.",
+				"",
+
+				headerStyle.Render("Intern RCC Automation | Kiatnakin Phatra Bank"),
+				subHeaderStyle.Render("[June - July 2025]"),
+				"Develop RccAssets Application for tracking assets in RCC department with Microsoft Power platform.",
+				),
+		},
+		{
+			// TODO: project
+			title: "Projects",
+			content: "Projects",
+		},
+		{
+			title: "Skill",
+			content: lipgloss.JoinVertical(lipgloss.Left, 
+				headerStyle.Render("Technicall Skills"),
+				subHeaderStyle.Render("Languages: ") + "TypeScript, Javascript, Python, SQL, C, Java, Bash script",
+				subHeaderStyle.Render("Framework/Library: ") + "Nodejs, ReactJS, NextJS, ExpressJS, Electron, \nPandas, Scikit-learn, JavaFx",
+				subHeaderStyle.Render("Tools: ") + "PostgreSQL, Postman, Git, Github, Docker, AWS(ec2, s3), \nMongoDB, Redis, Google Colab, Github Actions, Linux, Claude Code, GeminiCLi",
+				subHeaderStyle.Render("Soft Skill: ") + "Talk",
+				),
+		},
+	}
+
+	return tabs
 }
 
 func New() *Model {
@@ -42,10 +109,12 @@ func New() *Model {
 	activeTabBorder := tabBorderWithBottom("┘", " ", "└", true)
 	title := tabBorderWithBottom("┌", "─", "└", false)
 	title.Left = ""
-	contentStyle := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, true, true).Padding(1)
+	contentStyle := lipgloss.NewStyle().Border(lipgloss.NormalBorder(), false, true, true).Padding(0, 1).Height(Width)
 
-	catArt := " /\\_/\\\n( o.o )\n > ^ <"
-	infoText := "My name is Jirayut Najan.\nSecond year computer engineering\nstudy in Chulalongkorn University"
+	tabs := ContentDetail()
+
+	vp := viewport.New(viewport.WithHeight(SafeContentHeight), viewport.WithWidth(SafeContentWidth))
+	vp.SetContent(tabs[0].content)
 
 	return &Model{
 		loading: true,
@@ -55,26 +124,8 @@ func New() *Model {
 			content: contentStyle,
 			title: title,
 		},
-		tabs: &[]tab{
-			{
-				title: "About Me",
-				content: lipgloss.JoinVertical(lipgloss.Left,
-					lipgloss.JoinHorizontal(lipgloss.Top,
-						catArt,
-						"   ",
-						infoText,
-					),
-				),
-			},
-			{
-				title: "Skill",
-				content: "eiei",
-			},
-			{
-				title: "Experience",
-				content: "11",
-			},
-		},
+		tabs: &tabs,
+		viewport: vp,
 	}
 }
 
@@ -113,12 +164,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "h", "left":
 			m.activeTab = max(0, m.activeTab-1)
+			m.viewport.GotoTop()
+			// UPDATE STATE SHOULD BE ON UPDATE NOT VIEW
+			wrappedContent := lipgloss.NewStyle().Width(m.viewport.Width()).Render((*m.tabs)[m.activeTab].content)
+			m.viewport.SetContent(wrappedContent)
 			return m, nil
 		case "l", "right":
 			m.activeTab = min(len(*m.tabs)-1, m.activeTab+1)
+			m.viewport.GotoTop()
+			wrappedContent := lipgloss.NewStyle().Width(m.viewport.Width()).Render((*m.tabs)[m.activeTab].content)
+			m.viewport.SetContent(wrappedContent)
 			return m, nil
 		}
 	}
+
+	m.viewport, cmd = m.viewport.Update(msg)
 
 	return m, cmd
 }
@@ -165,13 +225,15 @@ func (m Model) View() tea.View {
 		)
 
 	navWidth := lipgloss.Width(navbar)
-	content := m.styles.content.Width(navWidth).Render((*m.tabs)[m.activeTab].content)
+	// m.viewport.SetContent((*m.tabs)[m.activeTab].content)
+	content := m.viewport.View()
+	body := m.styles.content.Width(navWidth).Render(content)
 
 	page := lipgloss.NewStyle().Padding(1, 2).Render(
 		lipgloss.JoinVertical(
 			lipgloss.Top,
 			navbar,
-			content,
+			body,
 			),
 		)
 
