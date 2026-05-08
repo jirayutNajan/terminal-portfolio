@@ -257,6 +257,7 @@ func (m Model) View() tea.View {
 		)
 
 	v := tea.NewView(page)
+	v.AltScreen = true
 	return v
 }
 
