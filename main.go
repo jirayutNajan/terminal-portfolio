@@ -44,7 +44,7 @@ type Model struct {
 func ContentDetail() []tab {
 	// STYLE
 	headerStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#8800ff"))
-	subHeaderStyle := lipgloss.NewStyle().Bold(true)
+	subHeaderStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#29f29b"))
 	linkStyle := lipgloss.NewStyle().Underline(true).Foreground(lipgloss.Color("#0000FF"))
 
 	tabs := []tab{
@@ -68,6 +68,7 @@ func ContentDetail() []tab {
 		{
 			title: "Experience",
 			content: lipgloss.JoinVertical(lipgloss.Left, 
+				lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("↑/↓ for scroll"),
 				headerStyle.Render("Freelance Full-stack Developer | Academic Service Center, MSU"),
 				subHeaderStyle.Render("[Mar, 2026]"),
 				"Developed a full-stack online course registration platform for the Academic Service Center, Mahasarakham University.",
@@ -85,9 +86,24 @@ func ContentDetail() []tab {
 				),
 		},
 		{
-			// TODO: project
 			title: "Projects",
-			content: "Projects",
+			content: lipgloss.JoinVertical(lipgloss.Left, 
+				headerStyle.Render("My personal projects") + lipgloss.NewStyle().Width(35).Render(" ") + lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("↑/↓ for scroll"),
+				subHeaderStyle.Render("QuicknoteAI"),
+				"Developed an AI-powered study assistant web application using ReactJS as a frontend, ExpressJS as a backend and MongoDB as a nosql database.\n",
+
+				subHeaderStyle.Render("Traffy fondue data analysis"),
+				"Collaborated in a group project to analyze Traffy Fondue public complaint data with the objective of predicting new ticket reopen probability and present as a dashboard.\n",
+
+				subHeaderStyle.Render("Neko feed embedded project"),
+				"Collaborated in a group project to develop an automated IoT cat feeder using a multi-node ESP32 architecture (Sensor, Gate-way, and Camera nodes) with real-time monitoring dashboard.\n",
+
+				subHeaderStyle.Render("Drug Label Reader for the Elderly Mobile Application"),
+				"Built an Android app with Kotlin to support elderly users in reading drug labels.\n",
+
+				subHeaderStyle.Render("Pixel harvest 2d game"),
+				"Collaborated in a group project to develop a 2D top-down farming game using Java and JavaFX.\n",
+				),
 		},
 		{
 			title: "Skill",
@@ -224,16 +240,19 @@ func (m Model) View() tea.View {
 			nav...
 		)
 
-	navWidth := lipgloss.Width(navbar)
+	bodyWidth := lipgloss.Width(navbar)
 	// m.viewport.SetContent((*m.tabs)[m.activeTab].content)
 	content := m.viewport.View()
-	body := m.styles.content.Width(navWidth).Render(content)
+	body := m.styles.content.Width(bodyWidth).Render(content)
+
+	footer := lipgloss.Place(bodyWidth, 1, lipgloss.Bottom, lipgloss.Right, lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("←, ↑, →, ↓"))
 
 	page := lipgloss.NewStyle().Padding(1, 2).Render(
 		lipgloss.JoinVertical(
 			lipgloss.Top,
 			navbar,
 			body,
+			footer,
 			),
 		)
 
