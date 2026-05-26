@@ -32,7 +32,7 @@ jobs:
         run: |
           GOOS=$(echo "${{ matrix.goos }}" | sed 's/-latest//')
           GOARCH=amd64
-          go build -o terminal-port-${GOOS}-${GOARCH} .
+          go build -o "terminal-port-${GOOS}-${GOARCH}" .
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -45,6 +45,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download Artifact # ดึง artifact ทั้งหมดลงมาใน jobs (แค่จาก repo นั้นๆ)
         uses: actions/download-artifact@v4
