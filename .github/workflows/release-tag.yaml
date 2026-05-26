@@ -49,7 +49,7 @@ jobs:
       - name: Download Artifact # ดึง artifact ทั้งหมดลงมาใน jobs (แค่จาก repo นั้นๆ)
         uses: actions/download-artifact@v4
       - name: Create github Release
-        uses: softprops/actions-gh-release@v2
+        uses: softprops/action-gh-release@v2
         with:
           files: terminal-port-*/terminal-port-*
           tag_name: ${{ github.ref_name }}
