@@ -1,0 +1,57 @@
+name: Release (Tag-based)
+
+on:
+  push:
+    tags: [ "v*.*.*" ]
+
+jobs:
+  build:
+    strategy: # strategy matrix คือการให้ github action รันซ้ำกันตาม ตัวแปรที่กำหนด
+      matrix:
+        # os: [ "ubuntu-latest", "windows-latest" ] # windows-latest, macos-latest
+        include:
+        - os: ubuntu-latest
+          goos: linux
+        - os: windows-latest
+          goos: windows
+        - os: macos-latest
+          goos: darwin
+    runs-on: ${{ matrix.os }} # ตัวแปรที่ได้
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@4
+      - name: Set up go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.0"
+      # - name: Run Tests:
+      # run: go test ./...
+      - name: Build Binary # build ตาม Matrix os
+        run: |
+          GOOS=$(echo "${{ matrix.goos }}" | sed 's/-latest//')
+          GOARCH=amd64
+          go build -o terminal-port-${GOOS}-${GOARCH} .
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terminal-port-${{ matrix.os }}
+          path: terminal-port-${{ matrix.os }}-amd64
+
+# github jobs doesn't share file system
+# upload-artifact will temporary upload artifact to github temporary storage
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifact # ดึง artifact ทั้งหมดลงมาใน jobs (แค่จาก repo นั้นๆ)
+        uses: actions/download-artifact@v4
+      - name: Create github Release
+        uses: softprop/actions-gh-release@v2
+        with:
+          files: terminal-port-*/terminal-port-*
+          tag_name: ${{ github.ref_name }}
+          body: "Automated release of ${{ github.ref_name }}."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
