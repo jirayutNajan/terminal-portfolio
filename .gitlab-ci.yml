@@ -49,8 +49,8 @@ release_job:
     assets:
       links:
         - name: "terminal-port-linux-amd64"
-          url: "$CI_PROJECT_URL/-/jobs/$BUILD_JOB_ID_linux_amd64/artifacts/file/dist/terminal-port-linux-amd64"
+          url: "$CI_PROJECT_URL/-/jobs/$BUILD_JOB_ID_linux_amd64/artifacts/raw/terminal-port-linux-amd64"
         - name: "terminal-port-darwin-amd64"
-          url: "$CI_PROJECT_URL/-/jobs/$BUILD_JOB_ID_darwin_amd64/artifacts/file/dist/terminal-port-darwin-amd64"
+          url: "$CI_PROJECT_URL/-/jobs/$BUILD_JOB_ID_darwin_amd64/artifacts/raw/terminal-port-darwin-amd64"
         - name: "terminal-port-windows-amd64.exe"
-          url: "$CI_PROJECT_URL/-/jobs/$BUILD_JOB_ID_windows_amd64/artifacts/file/dist/terminal-port-windows-amd64.exe"
+          url: "$CI_PROJECT_URL/-/jobs/$BUILD_JOB_ID_windows_amd64/artifacts/raw/terminal-port-windows-amd64.exe"
