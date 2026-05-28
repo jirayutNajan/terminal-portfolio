@@ -42,9 +42,6 @@ release_job:
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+.*$/'
   script: # must have some script
     - echo "running release job"
-
-    - echo "--------------------------------build env--------------------------------"
-    - cat build.env
   release:
     tag_name: "$CI_COMMIT_TAG"
     description: "$CI_COMMIT_TAG"
