@@ -9,8 +9,12 @@ build-job:
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+.*$/'
   parallel:
     matrix:
-      - OS_TYPE: ['linux', 'windows', 'darwin']
-        ARCH: ['amd64', 'amd64', 'arm64']
+      - OS_TYPE: ['linux']
+        ARCH: ['amd64']
+      - OS_TYPE: ['windows']
+        ARCH: ['amd64']
+      - OS_TYPE: ['darwin']
+        ARCH: ['arm64']
   script:
     - echo "Running on $OS_TYPE..."
 
