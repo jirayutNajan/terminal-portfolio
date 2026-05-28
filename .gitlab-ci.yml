@@ -10,7 +10,7 @@ build-job:
   parallel:
     matrix:
       - OS_TYPE: ['linux', 'windows', 'darwin']
-      - ARCH: ['amd64', 'amd64', 'arm64']
+        ARCH: ['amd64', 'amd64', 'arm64']
   script:
     - echo "Running on $OS_TYPE..."
 
