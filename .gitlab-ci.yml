@@ -27,11 +27,13 @@ build-job:
       - terminal-port-*
     expire_in: 1 day
 
+# gitlab will automatic download artifact from previous job
 release_job:
   stage: release
+  image: registry.gitlab.com/gitlab-org/cli:latest
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+.*$/'
-  script:
+  script: # must have some script
     - echo "running release job"
   release:
     tag_name: "$CI_COMMIT_TAG"
