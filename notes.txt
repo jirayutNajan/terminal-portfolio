@@ -1,0 +1,9 @@
+การ build เป็น binary และ uplaod artifact ใน release tag
+
+action ที่ใช้บ่อย
+- actions/upload-artifact@v4
+- actions/download-artifact@v4
+สองอันนี้สำหรับ upload/download artifact ไว้ส่งกันข้าม job
+
+- softprops/action-gh-release@v2
+ดึง artifact ตามชื่อจาก upload แล้ว release ใน tag release
