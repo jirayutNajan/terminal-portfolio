@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -68,9 +69,14 @@ func ContentDetail() []tab {
 		{
 			title: "Experience",
 			content: lipgloss.JoinVertical(lipgloss.Left, 
-				lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("↑/↓ for scroll"),
+				headerStyle.Render("Experiences") + lipgloss.NewStyle().Width(45).Render(" ") + lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("↑/↓ for scroll"),
+				headerStyle.Render("Devops Engineer Intern | TCC Technology"),
+				subHeaderStyle.Render("[May - July 2026]"),
+				// "Developed a full-stack online course registration platform for the Academic Service Center, Mahasarakham University.",
+				"",
+
 				headerStyle.Render("Freelance Full-stack Developer | Academic Service Center, MSU"),
-				subHeaderStyle.Render("[Mar, 2026]"),
+				subHeaderStyle.Render("[Mar 2026]"),
 				"Developed a full-stack online course registration platform for the Academic Service Center, Mahasarakham University.",
 				linkStyle.Hyperlink("https://umsuregister.msu.ac.th/").Render("umsuregister.msu.ac.th"),
 				"",
@@ -88,7 +94,7 @@ func ContentDetail() []tab {
 		{
 			title: "Projects",
 			content: lipgloss.JoinVertical(lipgloss.Left, 
-				headerStyle.Render("My personal projects") + lipgloss.NewStyle().Width(35).Render(" ") + lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("↑/↓ for scroll"),
+				headerStyle.Render("My personal projects") + lipgloss.NewStyle().Width(36).Render(" ") + lipgloss.NewStyle().Foreground(lipgloss.Color("#808080")).Render("↑/↓ for scroll"),
 				subHeaderStyle.Render("QuicknoteAI"),
 				"Developed an AI-powered study assistant web application using ReactJS as a frontend, ExpressJS as a backend and MongoDB as a nosql database.\n",
 
@@ -160,8 +166,13 @@ func tabBorderWithBottom(left, middle, right string, round bool) lipgloss.Border
 	return border
 }
 
+func clearScreen() tea.Msg {
+	fmt.Print("\033[H\033[2J\033[3J")
+	return "eiei"
+}
+
 func (m Model) Init() tea.Cmd {
-	return nil
+	return clearScreen
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -191,6 +202,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			wrappedContent := lipgloss.NewStyle().Width(m.viewport.Width()).Render((*m.tabs)[m.activeTab].content)
 			m.viewport.SetContent(wrappedContent)
 			return m, nil
+		case "v":
+			return m, tea.ClearScreen
 		}
 	}
 
@@ -257,7 +270,7 @@ func (m Model) View() tea.View {
 		)
 
 	v := tea.NewView(page)
-	v.AltScreen = true
+	// v.AltScreen = true
 	return v
 }
 
