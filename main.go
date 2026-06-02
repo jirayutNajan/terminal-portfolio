@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -14,6 +15,8 @@ const (
 	aboutme int = iota
 	skill
 	experience
+	projects
+	anonDM
 )
 
 const SafeContentHeight = 10
@@ -40,6 +43,7 @@ type Model struct {
 	styles *styles
 	tabs *[]tab
 	viewport viewport.Model
+	textinput textinput.Model
 }
 
 func ContentDetail() []tab {
@@ -121,6 +125,13 @@ func ContentDetail() []tab {
 				subHeaderStyle.Render("Soft Skill: ") + "Talk",
 				),
 		},
+		{
+			title: "Anon DM",
+			content: lipgloss.NewStyle().Border(lipgloss.NormalBorder(), true).Render(lipgloss.JoinVertical(lipgloss.Left, 
+				headerStyle.Render("Send anonymous messages to me ♥"),
+				),
+				),
+		},
 	}
 
 	return tabs
@@ -138,6 +149,11 @@ func New() *Model {
 	vp := viewport.New(viewport.WithHeight(SafeContentHeight), viewport.WithWidth(SafeContentWidth))
 	vp.SetContent(tabs[0].content)
 
+	ti := textinput.New()
+	ti.Placeholder = "Hello (press esc to unfocus and enter to send)"
+	ti.SetWidth(SafeContentWidth)
+	ti.Blur()
+
 	return &Model{
 		loading: true,
 		styles: &styles{
@@ -148,6 +164,7 @@ func New() *Model {
 		},
 		tabs: &tabs,
 		viewport: vp,
+		textinput: ti,
 	}
 }
 
@@ -171,12 +188,25 @@ func clearScreen() tea.Msg {
 	return "eiei"
 }
 
+func writeNewLineInFile(anonMsg string) {
+	file, err := os.OpenFile("anon.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	_, err = fmt.Fprintln(file, anonMsg)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (m Model) Init() tea.Cmd {
 	return clearScreen
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -186,30 +216,59 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.loading = false
 		}
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "h", "left":
-			m.activeTab = max(0, m.activeTab-1)
-			m.viewport.GotoTop()
-			// UPDATE STATE SHOULD BE ON UPDATE NOT VIEW
-			wrappedContent := lipgloss.NewStyle().Width(m.viewport.Width()).Render((*m.tabs)[m.activeTab].content)
-			m.viewport.SetContent(wrappedContent)
-			return m, nil
-		case "l", "right":
-			m.activeTab = min(len(*m.tabs)-1, m.activeTab+1)
-			m.viewport.GotoTop()
-			wrappedContent := lipgloss.NewStyle().Width(m.viewport.Width()).Render((*m.tabs)[m.activeTab].content)
-			m.viewport.SetContent(wrappedContent)
-			return m, nil
-		case "v":
-			return m, tea.ClearScreen
+		if m.textinput.Focused() {
+			switch msg.String() {
+			case "enter":
+				writeNewLineInFile(m.textinput.Value())
+				m.textinput.SetValue("")
+			case "esc" :
+				m.textinput.Blur()
+			case "ctrl+c", "q":
+				return m, tea.Quit
+			}
+		} else {
+			switch msg.String() {
+			case "ctrl+c", "q":
+				return m, tea.Quit
+			case "h", "left":
+				m.activeTab = max(0, m.activeTab-1)
+				m.viewport.GotoTop()
+
+				if(m.activeTab != anonDM) {
+					m.textinput.Blur()
+				}
+			case "l", "right":
+				m.activeTab = min(len(*m.tabs)-1, m.activeTab+1)
+				m.viewport.GotoTop()
+
+				if(m.activeTab == anonDM) {
+					m.textinput.Focus()
+				} else {
+					m.textinput.Blur()
+				}
+
+				return m, textinput.Blink
+			}
 		}
 	}
 
-	m.viewport, cmd = m.viewport.Update(msg)
+	var cmdTi, cmdVp tea.Cmd
+	m.textinput, cmdTi = m.textinput.Update(msg)
+	m.viewport, cmdVp = m.viewport.Update(msg)
+	
+	cmds = append(cmds, cmdTi, cmdVp)
 
-	return m, cmd
+	// update content
+	activeContent := (*m.tabs)[m.activeTab].content
+	if(m.activeTab == anonDM) {
+		activeContent = lipgloss.JoinVertical(lipgloss.Left, activeContent, m.textinput.View())
+	}
+	wrappedContent := lipgloss.NewStyle().Width(m.viewport.Width()).Render(activeContent)
+	m.viewport.SetContent(wrappedContent)
+
+
+	// tea.Batch to perform many cmds
+	return m, tea.Batch(cmds...)
 }
 
 
@@ -244,7 +303,7 @@ func (m Model) View() tea.View {
 	nav := append([]string{
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#14d8ff")).
 		Border(m.styles.title, false, false, true, true).
-		Width(35).
+		Width(30).
 		Render("Jirayut-terminal-portfolio"),
 	}, tabs...)
 
